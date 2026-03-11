@@ -7,15 +7,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.example.rtmplibrary.domain.model.StreamState
 
-// RtmpCamera2 artık data katmanında tutuluyor — yayın kaynağı burası
+
 class StreamDataSource : ConnectChecker {
 
     private val state = MutableStateFlow<StreamState>(StreamState.Idle)
 
-    // Fragment'ten OpenGlView alındıktan sonra initCamera() ile başlatılır
+
     private lateinit var rtmpCamera: RtmpCamera2
 
-    // Fragment, openGlView hazır olunca bu metodu çağırır
+
     fun initCamera(openGlView: OpenGlView) {
         rtmpCamera = RtmpCamera2(openGlView, this)
     }
