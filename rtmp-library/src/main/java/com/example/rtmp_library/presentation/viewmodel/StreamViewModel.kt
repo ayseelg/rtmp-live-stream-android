@@ -1,10 +1,16 @@
-package com.example.rtmplibrary.presentation.viewmodel
+﻿package com.example.rtmplibrary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pedro.library.view.OpenGlView
+import com.example.rtmplibrary.domain.usecase.InitCameraUseCase
 import com.example.rtmplibrary.domain.usecase.StartStreamUseCase
 import com.example.rtmplibrary.domain.usecase.StopStreamUseCase
 import com.example.rtmplibrary.domain.usecase.ObserveStreamStateUseCase
+import com.example.rtmplibrary.domain.usecase.StartPreviewUseCase
+import com.example.rtmplibrary.domain.usecase.StopPreviewUseCase
+import com.example.rtmplibrary.domain.usecase.SwitchCameraUseCase
+import com.example.rtmplibrary.domain.model.StreamState
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 
@@ -13,7 +19,11 @@ import kotlinx.coroutines.flow.SharingStarted
 class StreamViewModel(
     observeStreamStateUseCase: ObserveStreamStateUseCase,
     private val startStreamUseCase: StartStreamUseCase,
-    private val stopStreamUseCase: StopStreamUseCase
+    private val stopStreamUseCase: StopStreamUseCase,
+    private val initCameraUseCase: InitCameraUseCase,
+    private val startPreviewUseCase: StartPreviewUseCase,
+    private val stopPreviewUseCase: StopPreviewUseCase,
+    private val switchCameraUseCase: SwitchCameraUseCase
 ) : ViewModel() {
 
     val streamState = observeStreamStateUseCase()
@@ -23,6 +33,12 @@ class StreamViewModel(
             null
         )
 
+    val isStreaming: Boolean get() = streamState.value is StreamState.Streaming
+
+    fun initCamera(openGlView: OpenGlView) {
+        initCameraUseCase(openGlView)
+    }
+
     fun startStream(url: String) {
         startStreamUseCase(url)
     }
@@ -31,7 +47,19 @@ class StreamViewModel(
         stopStreamUseCase()
     }
 
+    fun startPreview() {
+        startPreviewUseCase()
+    }
+
+    fun stopPreview() {
+        stopPreviewUseCase()
+    }
+
+    fun switchCamera() {
+        switchCameraUseCase()
+    }
+
 }
-//Bu kod, yayını başlatma, durdurma ve durumunu takip etme
-// işlemlerini yöneten ViewModel’dir; UI, bu sınıf üzerinden stream’i başlatır,
-// durdurur ve durumunu gerçek zamanlı olarak alır.
+//Bu kod, yayini baslatma, durdurma ve durumunu takip etme
+// islemlerini yoneten ViewModel dir; UI, bu sinif uzerinden stream i baslatir,
+// durdurur ve durumunu gercek zamanli olarak alir.

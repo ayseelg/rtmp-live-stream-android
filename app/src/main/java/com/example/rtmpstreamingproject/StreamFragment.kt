@@ -1,4 +1,4 @@
-package com.example.rtmpstreamingproject
+﻿package com.example.rtmpstreamingproject
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -19,18 +19,19 @@ import androidx.lifecycle.lifecycleScope
 import com.example.rtmplibrary.data.datasource.StreamDataSource
 import com.example.rtmplibrary.data.repository.StreamRepositoryImpl
 import com.example.rtmplibrary.domain.model.StreamState
+import com.example.rtmplibrary.domain.usecase.InitCameraUseCase
 import com.example.rtmplibrary.domain.usecase.ObserveStreamStateUseCase
+import com.example.rtmplibrary.domain.usecase.StartPreviewUseCase
 import com.example.rtmplibrary.domain.usecase.StartStreamUseCase
+import com.example.rtmplibrary.domain.usecase.StopPreviewUseCase
 import com.example.rtmplibrary.domain.usecase.StopStreamUseCase
+import com.example.rtmplibrary.domain.usecase.SwitchCameraUseCase
 import com.example.rtmplibrary.presentation.viewmodel.StreamViewModel
-import com.pedro.common.ConnectChecker
-import com.pedro.library.rtmp.RtmpCamera2
 import com.pedro.library.view.OpenGlView
 import kotlinx.coroutines.flow.collectLatest
 
-class StreamFragment : Fragment(), ConnectChecker {
+class StreamFragment : Fragment() {
 
-    private lateinit var rtmpCamera: RtmpCamera2
     private lateinit var openGlView: OpenGlView
     private lateinit var btnStartStop: Button
     private lateinit var btnEndStream: Button
@@ -49,7 +50,11 @@ class StreamFragment : Fragment(), ConnectChecker {
         StreamViewModel(
             ObserveStreamStateUseCase(repository),
             StartStreamUseCase(repository),
-            StopStreamUseCase(repository)
+            StopStreamUseCase(repository),
+            InitCameraUseCase(repository),
+            StartPreviewUseCase(repository),
+            StopPreviewUseCase(repository),
+            SwitchCameraUseCase(repository)
         )
     }
 
@@ -89,24 +94,21 @@ class StreamFragment : Fragment(), ConnectChecker {
         etRtmpUrl.setText("rtmp://10.0.2.2:1935/stream")
         etStreamKey.setText("test")
 
-        rtmpCamera = RtmpCamera2(openGlView, this)
+        // RtmpCamera2 artik data katmaninda; openGlView buradan iletiliyor
+        viewModel.initCamera(openGlView)
 
         openGlView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 val hasCam = ContextCompat.checkSelfPermission(
                     requireContext(), Manifest.permission.CAMERA
                 ) == PackageManager.PERMISSION_GRANTED
-                if (hasCam && !rtmpCamera.isStreaming) {
-                    rtmpCamera.startPreview()
+                if (hasCam && !viewModel.isStreaming) {
+                    viewModel.startPreview()
                 }
             }
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                if (rtmpCamera.isStreaming) {
-                    rtmpCamera.stopStream()
-                    viewModel.stopStream()
-                }
-                rtmpCamera.stopPreview()
+                viewModel.stopStream()
             }
         })
 
@@ -119,15 +121,11 @@ class StreamFragment : Fragment(), ConnectChecker {
         }
 
         btnEndStream.setOnClickListener {
-            if (rtmpCamera.isStreaming) {
-                rtmpCamera.stopStream()
-                rtmpCamera.stopPreview()
-                viewModel.stopStream()
-            }
+            viewModel.stopStream()
         }
 
         btnSwitchCamera.setOnClickListener {
-            rtmpCamera.switchCamera()
+            viewModel.switchCamera()
         }
 
         btnClose.setOnClickListener {
@@ -138,7 +136,7 @@ class StreamFragment : Fragment(), ConnectChecker {
         lifecycleScope.launchWhenStarted {
             viewModel.streamState.collectLatest { state ->
                 when (state) {
-                    is StreamState.Idle, is StreamState.Stopped, is StreamState.Error -> {
+                    is StreamState.Idle, is StreamState.Stopped -> {
                         btnStartStop.isEnabled = true
                         controlsContainer.visibility = View.VISIBLE
                         btnEndStream.visibility = View.GONE
@@ -146,9 +144,18 @@ class StreamFragment : Fragment(), ConnectChecker {
                         viewerCountCard.visibility = View.GONE
                         tvStatus.visibility = View.GONE
                     }
+                    is StreamState.Error -> {
+                        btnStartStop.isEnabled = true
+                        controlsContainer.visibility = View.VISIBLE
+                        btnEndStream.visibility = View.GONE
+                        liveStatusCard.visibility = View.GONE
+                        viewerCountCard.visibility = View.GONE
+                        tvStatus.visibility = View.GONE
+                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                    }
                     is StreamState.Connecting -> {
                         btnStartStop.isEnabled = false
-                        showStatus("Bağlanıyor...")
+                        showStatus("Baglanıyor...")
                     }
                     is StreamState.Streaming -> {
                         btnStartStop.isEnabled = false
@@ -170,7 +177,7 @@ class StreamFragment : Fragment(), ConnectChecker {
     }
 
     private fun startStreaming() {
-        if (rtmpCamera.isStreaming) return
+        if (viewModel.isStreaming) return
         val baseUrl = etRtmpUrl.text.toString().trim().trimEnd('/')
         val streamKey = etStreamKey.text.toString().trim()
         if (baseUrl.isEmpty()) {
@@ -178,53 +185,13 @@ class StreamFragment : Fragment(), ConnectChecker {
             return
         }
         if (streamKey.isEmpty()) {
-            Toast.makeText(requireContext(), "Yayın anahtarı giriniz", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Yayin anahtari giriniz", Toast.LENGTH_SHORT).show()
             return
         }
         val url = "$baseUrl/$streamKey"
-        rtmpCamera.startPreview()
-        if (rtmpCamera.prepareAudio() && rtmpCamera.prepareVideo()) {
-            rtmpCamera.startStream(url)
-            viewModel.startStream(url)
-        } else {
-            Toast.makeText(requireContext(), "Kamera/ses hazırlanamadı", Toast.LENGTH_SHORT).show()
-            rtmpCamera.stopPreview()
-        }
+        // Tum kamera islemleri data katmaninda; sadece URL iletiliyor
+        viewModel.startStream(url)
     }
-
-    override fun onConnectionStarted(url: String) {
-        requireActivity().runOnUiThread { showStatus("Bağlanıyor...") }
-    }
-
-    override fun onConnectionSuccess() {
-        requireActivity().runOnUiThread {
-            tvStatus.visibility = View.GONE
-            Toast.makeText(requireContext(), "Yayın başladı!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onConnectionFailed(reason: String) {
-        requireActivity().runOnUiThread {
-            Toast.makeText(requireContext(), "Bağlantı hatası: $reason", Toast.LENGTH_LONG).show()
-            rtmpCamera.stopStream()
-            rtmpCamera.stopPreview()
-            viewModel.stopStream()
-        }
-    }
-
-    override fun onNewBitrate(bitrate: Long) {}
-
-    override fun onDisconnect() {
-        requireActivity().runOnUiThread { viewModel.stopStream() }
-    }
-
-    override fun onAuthError() {
-        requireActivity().runOnUiThread {
-            Toast.makeText(requireContext(), "Sunucu auth hatası", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onAuthSuccess() {}
 
     override fun onResume() {
         super.onResume()
@@ -233,10 +200,6 @@ class StreamFragment : Fragment(), ConnectChecker {
 
     override fun onPause() {
         super.onPause()
-        if (rtmpCamera.isStreaming) {
-            rtmpCamera.stopStream()
-            viewModel.stopStream()
-        }
-        rtmpCamera.stopPreview()
+        viewModel.stopStream()
     }
 }

@@ -1,13 +1,24 @@
 package com.example.rtmplibrary.domain.repository
 
+import com.pedro.library.view.OpenGlView
 import kotlinx.coroutines.flow.Flow
 import com.example.rtmplibrary.domain.model.StreamState
 
 interface StreamRepository {
 
+    fun initCamera(openGlView: OpenGlView)
+
     fun startStream(url: String)
 
     fun stopStream()
+
+    fun startPreview()
+
+    fun stopPreview()
+
+    fun switchCamera()
+
+    val isStreaming: Boolean
 
     fun observeStreamState(): Flow<StreamState>
 
