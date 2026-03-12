@@ -5,9 +5,10 @@ import com.example.rtmplibrary.data.datasource.StreamDataSource
 import com.example.rtmplibrary.domain.model.StreamState
 import com.example.rtmplibrary.domain.repository.StreamRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 
-class StreamRepositoryImpl(
+class StreamRepositoryImpl @Inject constructor(
     private val dataSource: StreamDataSource
 ) : StreamRepository {
 

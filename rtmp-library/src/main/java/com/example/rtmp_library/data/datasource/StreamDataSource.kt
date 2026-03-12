@@ -6,9 +6,11 @@ import com.pedro.library.view.OpenGlView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.example.rtmplibrary.domain.model.StreamState
+import javax.inject.Inject
+import javax.inject.Singleton
 
-
-class StreamDataSource : ConnectChecker {
+@Singleton
+class StreamDataSource @Inject constructor() : ConnectChecker {
 
     private val state = MutableStateFlow<StreamState>(StreamState.Idle)
 

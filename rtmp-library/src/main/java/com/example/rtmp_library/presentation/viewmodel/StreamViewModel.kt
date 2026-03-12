@@ -11,12 +11,13 @@ import com.example.rtmplibrary.domain.usecase.StartPreviewUseCase
 import com.example.rtmplibrary.domain.usecase.StopPreviewUseCase
 import com.example.rtmplibrary.domain.usecase.SwitchCameraUseCase
 import com.example.rtmplibrary.domain.model.StreamState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import javax.inject.Inject
 
-
-
-class StreamViewModel(
+@HiltViewModel
+class StreamViewModel @Inject constructor(
     observeStreamStateUseCase: ObserveStreamStateUseCase,
     private val startStreamUseCase: StartStreamUseCase,
     private val stopStreamUseCase: StopStreamUseCase,

@@ -15,21 +15,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.rtmplibrary.data.datasource.StreamDataSource
-import com.example.rtmplibrary.data.repository.StreamRepositoryImpl
 import com.example.rtmplibrary.domain.model.StreamState
-import com.example.rtmplibrary.domain.usecase.InitCameraUseCase
-import com.example.rtmplibrary.domain.usecase.ObserveStreamStateUseCase
-import com.example.rtmplibrary.domain.usecase.StartPreviewUseCase
-import com.example.rtmplibrary.domain.usecase.StartStreamUseCase
-import com.example.rtmplibrary.domain.usecase.StopPreviewUseCase
-import com.example.rtmplibrary.domain.usecase.StopStreamUseCase
-import com.example.rtmplibrary.domain.usecase.SwitchCameraUseCase
 import com.example.rtmplibrary.presentation.viewmodel.StreamViewModel
 import com.pedro.library.view.OpenGlView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
+@AndroidEntryPoint
 class StreamFragment : Fragment() {
 
     private lateinit var openGlView: OpenGlView
@@ -44,19 +38,7 @@ class StreamFragment : Fragment() {
     private lateinit var tvStatus: TextView
     private lateinit var controlsContainer: View
 
-    private val viewModel: StreamViewModel by lazy {
-        val dataSource = StreamDataSource()
-        val repository = StreamRepositoryImpl(dataSource)
-        StreamViewModel(
-            ObserveStreamStateUseCase(repository),
-            StartStreamUseCase(repository),
-            StopStreamUseCase(repository),
-            InitCameraUseCase(repository),
-            StartPreviewUseCase(repository),
-            StopPreviewUseCase(repository),
-            SwitchCameraUseCase(repository)
-        )
-    }
+    private val viewModel: StreamViewModel by viewModels()//hilt kullanımı
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()

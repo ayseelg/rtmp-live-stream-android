@@ -2,8 +2,9 @@ package com.example.rtmplibrary.domain.usecase
 
 import com.pedro.library.view.OpenGlView
 import com.example.rtmplibrary.domain.repository.StreamRepository
+import javax.inject.Inject
 
-class InitCameraUseCase(
+class InitCameraUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
