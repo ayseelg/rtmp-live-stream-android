@@ -1,31 +1,31 @@
 # rtmp-live-stream-android
 
-Android üzerinde RTMP protokolü kullanarak canlı yayın yapabilen bir uygulama. Kamera görüntüsünü alıp bir RTMP sunucusuna (YouTube, Twitch vb.) stream ediyor.
+Android üzerinde RTMP ile canlı yayın yapan bir uygulama. Kamera görüntüsünü alıp RTMP sunucusuna (YouTube, Twitch vb.) gönderiyor.
 
 ## Ne yapıyor?
 
-- Kameradan canlı görüntü alıp RTMP URL'e yayınlıyor
+- Kameradan görüntü alıp RTMP URL'e yayınlıyor
 - Ön/arka kamera geçişi var
-- Yayın durumunu (Bağlanıyor, Yayında, Durdu vs.) takip ediyor
-- URL ve stream key girişi fragment üzerinden yapılıyor
+- Yayın durumu takip ediliyor (Bağlanıyor, Yayında, Durdu, Hata)
+- URL ve stream key fragment üzerinden giriliyor
 
 ## Proje yapısı
 
-Projeyi iki modüle ayırdım:
+İki modül var:
 
-**`app`** → Kullanıcı arayüzü. `StreamFragment` burada, kamerayı açıp RTMP bağlantısını yönetiyor.
+**`app`** → UI katmanı. `StreamFragment` burada.
 
-**`rtmp-library`** → Stream işlemlerinin iş mantığı. Clean architecture uyguladım:
-- `data/` → `StreamDataSource`, stream state'ini tutuyor
-- `domain/` → model, repository interface ve use case'ler
-- `presentation/` → `StreamViewModel`
+**`rtmp-library`** → Asıl iş burda. Clean architecture:
+- `data/` → `StreamDataSource` sadece kamera ve network işleri yapıyor, state tutmuyor
+- `domain/` → model, repository interface ve use case'ler. Repository'deki her fonksiyon `Result` dönüyor
+- `presentation/` → `StreamViewModel`, state'in tek sahibi burada. `MutableStateFlow` burada tutuluyor, DataSource'dan gelen callback'leri state'e çeviriyor
 
 ## Kullanılan teknolojiler
 
 - Kotlin
 - RTMP: [rtmp-rtsp-stream-client-java](https://github.com/pedroSG94/rtmp-rtsp-stream-client-java) (Pedro kütüphanesi)
-- Coroutines + StateFlow
-- ViewModel
+- StateFlow, ViewModel
+- Hilt
 - minSdk: 29
 
 ## Kurulum
@@ -37,4 +37,4 @@ Projeyi iki modüle ayırdım:
 
 ## İzinler
 
-Uygulama kamera ve mikrofon izni istiyor, runtime'da handle ediliyor.
+Kamera ve mikrofon izni isteniyor, runtime'da handle ediliyor.
