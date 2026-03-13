@@ -2,9 +2,7 @@
 
 import com.pedro.library.view.OpenGlView
 import com.example.rtmplibrary.data.datasource.StreamDataSource
-import com.example.rtmplibrary.domain.model.StreamState
 import com.example.rtmplibrary.domain.repository.StreamRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 
@@ -12,34 +10,66 @@ class StreamRepositoryImpl @Inject constructor(
     private val dataSource: StreamDataSource
 ) : StreamRepository {
 
-    override fun initCamera(openGlView: OpenGlView) {
-        dataSource.initCamera(openGlView)
+    override fun initCamera(openGlView: OpenGlView): Result<Unit> {
+        return runCatching {
+            dataSource.initCamera(openGlView)
+        }
     }
 
-    override fun startStream(url: String) {
-        dataSource.startStream(url)
+    override fun startStream(url: String): Result<Unit> {
+        return runCatching {
+            dataSource.startStream(url)
+        }
     }
 
-    override fun stopStream() {
-        dataSource.stopStream()
+    override fun stopStream(): Result<Unit> {
+        return runCatching {
+            dataSource.stopStream()
+        }
     }
 
-    override fun startPreview() {
-        dataSource.startPreview()
+    override fun startPreview(): Result<Unit> {
+        return runCatching {
+            dataSource.startPreview()
+        }
     }
 
-    override fun stopPreview() {
-        dataSource.stopPreview()
+    override fun stopPreview(): Result<Unit> {
+        return runCatching {
+            dataSource.stopPreview()
+        }
     }
 
-    override fun switchCamera() {
-        dataSource.switchCamera()
+    override fun switchCamera(): Result<Unit> {
+        return runCatching {
+            dataSource.switchCamera()
+        }
     }
 
-    override val isStreaming: Boolean get() = dataSource.isStreaming
+    override fun isStreaming(): Result<Boolean> {
+        return runCatching {
+            dataSource.isStreaming
+        }
+    }
 
-    override fun observeStreamState(): Flow<StreamState> {
-        return dataSource.observeState()
+    override fun setStreamCallbacks(
+        onConnectionStarted: () -> Unit,
+        onConnectionSuccess: () -> Unit,
+        onConnectionFailed: (String) -> Unit,
+        onDisconnected: () -> Unit,
+        onAuthError: () -> Unit,
+        onPreparationFailed: (String) -> Unit
+    ): Result<Unit> {
+        return runCatching {
+            dataSource.setCallbacks(
+                onConnectionStarted = onConnectionStarted,
+                onConnectionSuccess = onConnectionSuccess,
+                onConnectionFailed = onConnectionFailed,
+                onDisconnected = onDisconnected,
+                onAuthError = onAuthError,
+                onPreparationFailed = onPreparationFailed
+            )
+        }
     }
 }
 //Bu kod, StreamRepository interface'inde tanimlanan yayin baslatma, durdurma ve

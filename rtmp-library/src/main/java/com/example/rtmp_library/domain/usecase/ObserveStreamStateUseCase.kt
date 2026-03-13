@@ -7,7 +7,23 @@ class ObserveStreamStateUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke() = repository.observeStreamState()
+    operator fun invoke(
+        onConnectionStarted: () -> Unit,
+        onConnectionSuccess: () -> Unit,
+        onConnectionFailed: (String) -> Unit,
+        onDisconnected: () -> Unit,
+        onAuthError: () -> Unit,
+        onPreparationFailed: (String) -> Unit
+    ): Result<Unit> {
+        return repository.setStreamCallbacks(
+            onConnectionStarted = onConnectionStarted,
+            onConnectionSuccess = onConnectionSuccess,
+            onConnectionFailed = onConnectionFailed,
+            onDisconnected = onDisconnected,
+            onAuthError = onAuthError,
+            onPreparationFailed = onPreparationFailed
+        )
+    }
 
 }
 //Bu sınıf, yayının durumunu almak için bir aracı  sağlar,

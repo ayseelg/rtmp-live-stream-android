@@ -7,8 +7,8 @@ class StartPreviewUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke() {
-        repository.startPreview()
+    operator fun invoke(): Result<Unit> {
+        return repository.startPreview()
     }
 
 }

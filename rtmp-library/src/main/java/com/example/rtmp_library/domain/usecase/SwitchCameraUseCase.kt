@@ -7,8 +7,8 @@ class SwitchCameraUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke() {
-        repository.switchCamera()
+    operator fun invoke(): Result<Unit> {
+        return repository.switchCamera()
     }
 
 }

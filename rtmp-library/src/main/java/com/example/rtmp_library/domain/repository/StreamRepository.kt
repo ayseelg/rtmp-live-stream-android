@@ -1,26 +1,31 @@
 package com.example.rtmplibrary.domain.repository
 
 import com.pedro.library.view.OpenGlView
-import kotlinx.coroutines.flow.Flow
-import com.example.rtmplibrary.domain.model.StreamState
 
 interface StreamRepository {
 
-    fun initCamera(openGlView: OpenGlView)
+    fun initCamera(openGlView: OpenGlView): Result<Unit>
 
-    fun startStream(url: String)
+    fun startStream(url: String): Result<Unit>
 
-    fun stopStream()
+    fun stopStream(): Result<Unit>
 
-    fun startPreview()
+    fun startPreview(): Result<Unit>
 
-    fun stopPreview()
+    fun stopPreview(): Result<Unit>
 
-    fun switchCamera()
+    fun switchCamera(): Result<Unit>
 
-    val isStreaming: Boolean
+    fun isStreaming(): Result<Boolean>
 
-    fun observeStreamState(): Flow<StreamState>
+    fun setStreamCallbacks(
+        onConnectionStarted: () -> Unit,
+        onConnectionSuccess: () -> Unit,
+        onConnectionFailed: (String) -> Unit,
+        onDisconnected: () -> Unit,
+        onAuthError: () -> Unit,
+        onPreparationFailed: (String) -> Unit
+    ): Result<Unit>
 
 }
 //Bu kod, yayını başlatma, durdurma ve yayın durumunu izleme

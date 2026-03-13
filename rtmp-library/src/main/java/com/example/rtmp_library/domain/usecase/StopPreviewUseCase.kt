@@ -7,8 +7,8 @@ class StopPreviewUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke() {
-        repository.stopPreview()
+    operator fun invoke(): Result<Unit> {
+        return repository.stopPreview()
     }
 
 }

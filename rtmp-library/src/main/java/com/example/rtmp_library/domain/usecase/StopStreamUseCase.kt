@@ -7,8 +7,8 @@ class StopStreamUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke() {
-        repository.stopStream()
+    operator fun invoke(): Result<Unit> {
+        return repository.stopStream()
     }
 
 }
