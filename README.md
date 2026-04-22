@@ -73,11 +73,13 @@ Kamera önizlemesi için kütüphanenin kullandığı `OpenGlView` ekran bileşe
 ```
 
 **2. Fragment / Activity İçinde Kurulumu (Init):**
+Aşağıda temel bir `Fragment` (veya `Activity`) üzerinde yayın başlatma, durdurma ve yayın durumunu dinleme örneğini bulabilirsiniz.
+
 ```kotlin
 @AndroidEntryPoint
-class StreamFragment : Fragment() {
+class LiveStreamFragment : Fragment() {
 
-    // Kütüphaneden ViewModel'i inject ediyoruz
+    // 1. Kütüphaneden gelen ViewModel'i Inject ediyoruz
     private val viewModel: StreamViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -85,41 +87,46 @@ class StreamFragment : Fragment() {
         
         val openGlView = view.findViewById<OpenGlView>(R.id.openGlView)
 
-        // 1. Yaşam döngüsünü kütüphaneye bağla (ÖNEMLİ: Memory leak ve uyku modu crash'lerini engeller)
+        // 2. Lifecycle Desteği: Uygulama arkaplana geçtiğinde memory leak veya çökme yaşanmaması için yaşam döngüsünü bağlayın.
         viewModel.bindLifecycle(viewLifecycleOwner.lifecycle)
 
-        // 2. Kamerayı tanımla (İlk initiliazation)
+        // 3. Kamera Başlatma: Layout'taki görünüm modülünü SDK'ya verin.
         viewModel.initCamera(openGlView)
         
-        // 3. Surface hazır olunca görüntü önizlemesini başlat
+        // 4. Önizleme (Preview): Kamera görünümü Android sisteminde hazır olduğunda tetiklenir.
         openGlView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                // Kamera ve mikrofon iznini aldığınızdan emin olduktan sonra çağırın:
+                // Not: Kamerayı başlatmadan önce Camera & Audio izinlerini kontrol edin!
                 viewModel.startPreview()
             }
             override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
             override fun surfaceDestroyed(h: SurfaceHolder) {}
         })
 
-        // 4. RTMP Yayınını başlatma ve durdurma
+        // 5. Yayını Başlat & Durdur
         btnStart.setOnClickListener {
-            viewModel.startStream("rtmp://sunucu.adresi/live", "stream_key")
+            val rtmpUrl = "rtmp://sunucu-adresi/live"
+            val streamKey = "my_stream_key"
+            viewModel.startStream(rtmpUrl, streamKey)
         }
         
         btnStop.setOnClickListener {
             viewModel.stopStream()
         }
 
-        // 5. Yayın durumunu (State API) Dinleme
+        // 6. Yayın Durumunu (State) Dinleme: Bağlanıyor, Yayında, Hata vs.
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.streamState.collectLatest { state ->
                     when (state) {
-                        is StreamState.Streaming -> { /* Yayındayız */ }
-                        is StreamState.Connecting -> { /* Bağlanıyor... */ }
-                        is StreamState.Stopped -> { /* Yayın durdu */ }
-                        is StreamState.Error -> { /* Hata alındı: state.message */ }
-                        else -> { /* Idle / Başlangıç */ }
+                        is StreamState.Streaming -> { /* Canlı Yayındayız */ }
+                        is StreamState.Connecting -> { /* Sunucuya Bağlanıyor... */ }
+                        is StreamState.Stopped -> { /* Yayın Durduruldu */ }
+                        is StreamState.Error -> { 
+                             val hataMesaji = state.message 
+                             /* Toast veya Log ile hatayı gösterin */
+                        }
+                        else -> { /* Beklemede (Idle) */ }
                     }
                 }
             }
