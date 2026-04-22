@@ -44,8 +44,10 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("com.github.pedroSG94.RootEncoder:library:2.6.7")
-    implementation(libs.hilt.android)
+    
+    // Uygulamada kullanan kişinin OpenGlView ekranını ve Hilt'i görebilmesi için API (dışa açık bağlantı) olmalı
+    api("com.github.pedroSG94.RootEncoder:library:2.6.7")
+    api(libs.hilt.android)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -60,7 +62,7 @@ afterEvaluate {
                 
                 groupId = "com.github.ayseelg"
                 artifactId = "rtmp-library"
-                version = "1.0.0"
+                version = "1.0.1"
             }
         }
         repositories {

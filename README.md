@@ -147,6 +147,13 @@ Kamera ve mikrofon izni isteniyor, runtime'da handle ediliyor.
 
 Her yeni güncellemeyle kütüphaneye eklenen özellikler ve değişiklikler burada listelenmektedir.
 
+### v1.0.1
+**Tarih:** 22 Nisan 2026
+
+**Değişiklikler ve İyileştirmeler:**
+- 🔧 **Hata Düzeltildi:** Dışarıdan kütüphaneyi kullanan uygulamaların `OpenGlView` ekran görünümünü ve `Hilt` sınıflarını XML/Kod düzeyinde çözememesi ihtimaline karşı `implementation` olan kütüphane bağımlılıkları `api` olarak güncellendi.
+- 📖 Kurulum aşamasına Fragment/Activity içerisindeki Init/Kurulum kod parçaları detaylıca eklendi.
+
 ### v1.0.0
 **Tarih:** 22 Nisan 2026
 
