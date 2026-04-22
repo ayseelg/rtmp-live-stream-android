@@ -55,7 +55,7 @@ dependencyResolutionManagement {
 **2. Uygulama seviyesi `build.gradle.kts` dosyasına bağımlılığı ekleyin:**
 ```kotlin
 dependencies {
-    implementation("com.github.ayseelg:rtmp-library:1.0.0")
+    implementation("com.github.ayseelg:rtmp-library:1.0.1")
 }
 ```
 
@@ -143,25 +143,20 @@ Kamera ve mikrofon izni isteniyor, runtime'da handle ediliyor.
 
 ---
 
-## 📝 Sürüm Notları (Release Notes)
+##  Sürüm Notları (Release Notes)
 
 Her yeni güncellemeyle kütüphaneye eklenen özellikler ve değişiklikler burada listelenmektedir.
 
-### v1.0.1
+### v1.0.1 (Güncel Sürüm)
 **Tarih:** 22 Nisan 2026
 
-**Değişiklikler ve İyileştirmeler:**
-- 🔧 **Hata Düzeltildi:** Dışarıdan kütüphaneyi kullanan uygulamaların `OpenGlView` ekran görünümünü ve `Hilt` sınıflarını XML/Kod düzeyinde çözememesi ihtimaline karşı `implementation` olan kütüphane bağımlılıkları `api` olarak güncellendi.
+**Yayınlanan Özellikler ve İyileştirmeler:**
+- 🚀 Kameradan görüntü alıp belirtilen RTMP sunucusuna yayın yapma eklendi.
+- 🔄 Ön/arka kamera geçişi eklendi (`Switch Camera`).
+- 📡 Yayın durumunun takibi (Bağlanıyor, Yayında, Durdu, Hata) eklendi.
+- 🧱 Clean Architecture prensipleriyle katmanlı mimari oluşturuldu.
+- 💉 Hilt (Dependency Injection) altyapısı sağlandı.
+- ♻️ Lifecycle Aware (Yaşam döngüsüne duyarlı) kamera kontrolü yapıldı (Memory Leak'ler önlendi).
+- 📦 Kütüphanenin `GitHub Packages` kullanılarak diğer projelerde dış bağımlılık olarak kullanılması entegre edildi.
 - 📖 Kurulum aşamasına Fragment/Activity içerisindeki Init/Kurulum kod parçaları detaylıca eklendi.
-
-### v1.0.0
-**Tarih:** 22 Nisan 2026
-
-**Yayınlanan Özellikler (İlk Yayın):**
-- Kameradan görüntü alıp belirtilen RTMP sunucusuna yayın yapma eklendi.
--  Ön/arka kamera geçişi eklendi (`Switch Camera`).
--  Yayın durumunun takibi (Bağlanıyor, Yayında, Durdu, Hata) eklendi.
--  Clean Architecture prensipleriyle katmanlı mimari oluşturuldu.
--  Hilt (Dependency Injection) altyapısı sağlandı.
--  Lifecycle Aware (Yaşam döngüsüne duyarlı) kamera kontrolü yapıldı (Memory Leak'ler önlendi).
--  Kütüphanenin `GitHub Packages` kullanılarak diğer projelerde dış bağımlılık olarak kullanılması entegre edildi.
+- 🔧  **Dependency Fix:** SDK içerisindeki `OpenGlView` ve `Hilt` sınıflarının dış projelerde görülmesi için Gradle `api` bağımlılık güncellemesi yapıldı.
