@@ -72,69 +72,70 @@ Kamera önizlemesi için kütüphanenin kullandığı `OpenGlView` ekran bileşe
     android:layout_height="match_parent" />
 ```
 
-**2. Fragment / Activity İçinde Kurulumu (Init):**
-Aşağıda temel bir `Fragment` (veya `Activity`) üzerinde yayın başlatma, durdurma ve yayın durumunu dinleme örneğini bulabilirsiniz.
-
+**2. ViewModel ve Yaşam Döngüsü Bağlantısı:**
+Activity veya Fragment kodunuzda ilk olarak ViewModel'i çağırın ve Memory Leak oluşmaması için mutlaka lifecycle bağlamasını yapın:
 ```kotlin
-@AndroidEntryPoint
-class LiveStreamFragment : Fragment() {
+// Hilt kullanarak inject ediyoruz
+private val viewModel: StreamViewModel by viewModels()
 
-    // 1. Kütüphaneden gelen ViewModel'i Inject ediyoruz
-    private val viewModel: StreamViewModel by viewModels()
+override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    
+    // SDK uyku modunda crash vermesin diye yaşam döngüsüne bağlayın
+    viewModel.bindLifecycle(viewLifecycleOwner.lifecycle)
+}
+```
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        
-        val openGlView = view.findViewById<OpenGlView>(R.id.openGlView)
+**3. Kamerayı Tanımlama ve İzleme (Preview):**
+XML'e eklediğiniz `OpenGlView` ekranı hazır olduğunda, kameranın önizleme modunu başlatmalısınız (`startPreview` öncesinde mutlaka kamera iznini almış olmaya dikkat edin!):
+```kotlin
+val openGlView = view.findViewById<OpenGlView>(R.id.openGlView)
+viewModel.initCamera(openGlView)
 
-        // 2. Lifecycle Desteği: Uygulama arkaplana geçtiğinde memory leak veya çökme yaşanmaması için yaşam döngüsünü bağlayın.
-        viewModel.bindLifecycle(viewLifecycleOwner.lifecycle)
+openGlView.holder.addCallback(object : SurfaceHolder.Callback {
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        viewModel.startPreview() // Kamera ve Ses izni gerektirir!
+    }
+    override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
+    override fun surfaceDestroyed(h: SurfaceHolder) {}
+})
+```
 
-        // 3. Kamera Başlatma: Layout'taki görünüm modülünü SDK'ya verin.
-        viewModel.initCamera(openGlView)
-        
-        // 4. Önizleme (Preview): Kamera görünümü Android sisteminde hazır olduğunda tetiklenir.
-        openGlView.holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(holder: SurfaceHolder) {
-                // Not: Kamerayı başlatmadan önce Camera & Audio izinlerini kontrol edin!
-                viewModel.startPreview()
-            }
-            override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
-            override fun surfaceDestroyed(h: SurfaceHolder) {}
-        })
+**4. Canlı Yayını Başlatma ve Durdurma:**
+Butonlarınıza ait fonksiyonlarda yayın komutlarını kolayca verebilirsiniz:
+```kotlin
+// Yayını başlat
+btnStart.setOnClickListener {
+    val rtmpUrl = "rtmp://sunucu-adresi/live"
+    val streamKey = "my_stream_key"
+    viewModel.startStream(rtmpUrl, streamKey)
+}
 
-        // 5. Yayını Başlat & Durdur
-        btnStart.setOnClickListener {
-            val rtmpUrl = "rtmp://sunucu-adresi/live"
-            val streamKey = "my_stream_key"
-            viewModel.startStream(rtmpUrl, streamKey)
-        }
-        
-        btnStop.setOnClickListener {
-            viewModel.stopStream()
-        }
+// Yayını durdur
+btnStop.setOnClickListener {
+    viewModel.stopStream()
+}
+```
 
-        // 6. Yayın Durumunu (State) Dinleme: Bağlanıyor, Yayında, Hata vs.
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.streamState.collectLatest { state ->
-                    when (state) {
-                        is StreamState.Streaming -> { /* Canlı Yayındayız */ }
-                        is StreamState.Connecting -> { /* Sunucuya Bağlanıyor... */ }
-                        is StreamState.Stopped -> { /* Yayın Durduruldu */ }
-                        is StreamState.Error -> { 
-                             val hataMesaji = state.message 
-                             /* Toast veya Log ile hatayı gösterin */
-                        }
-                        else -> { /* Beklemede (Idle) */ }
-                    }
-                }
+**5. Yayın Durumunu (State) Dinleme:**
+Yayının kullanıcı arayüzünüzde (UI) hangi aşamada olduğunu takip etmek için SDK'nın State Flow yapısını projenize entegre edin:
+```kotlin
+viewLifecycleOwner.lifecycleScope.launch {
+    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewModel.streamState.collectLatest { state ->
+            when (state) {
+                is StreamState.Connecting -> { /* Bağlanıyor... */ }
+                is StreamState.Streaming -> { /* Yayındayız! */ }
+                is StreamState.Stopped -> { /* Yayın Durduruldu */ }
+                is StreamState.Error -> { Log.e("Stream", state.message) }
+                else -> { /* Idle Durum */ }
             }
         }
     }
 }
 ```
-**Not:** Yayını başlatmadan önce Kamera (`Manifest.permission.CAMERA`) ve Mikrofon (`Manifest.permission.RECORD_AUDIO`) izinlerini kullanıcıdan runtime'da almış olmanız gerekmektedir. Yüksek stabilite için kütüphane kendi içinde Lifecycle Aware olarak çalışır, arkaplan görevlerini dert etmenize gerek kalmaz.
+
+**Not:** Yüksek stabilite için kütüphane kendi içinde `Lifecycle Aware` (Yaşam Döngüsü Duyarlı) olarak çalışır, arkaplan görevlerini ve temizleme işlemlerini dert etmenize gerek kalmaz.
 
 ### Projeyi Direkt Çalıştırmak
 
