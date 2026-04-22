@@ -59,6 +59,76 @@ dependencies {
 }
 ```
 
+### Kütüphanenin Kullanımı (Activity / Fragment İçerisinde)
+
+Kütüphane **Hilt** kullanmaktadır. Bu yüzden uygulamanızın varsayılan olarak bir `Application` sınıfında `@HiltAndroidApp` bulunmalı ve Activity/Fragment üzerinde `@AndroidEntryPoint` eklenmeli.
+
+**1. Arayüzünüz (XML) İçin Kamera Ekranı Ekleme:**
+Kamera önizlemesi için kütüphanenin kullandığı `OpenGlView` ekran bileşenini layout.xml'e ekleyin:
+```xml
+<com.pedro.library.view.OpenGlView
+    android:id="@+id/openGlView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
+
+**2. Fragment / Activity İçinde Kurulumu (Init):**
+```kotlin
+@AndroidEntryPoint
+class StreamFragment : Fragment() {
+
+    // Kütüphaneden ViewModel'i inject ediyoruz
+    private val viewModel: StreamViewModel by viewModels()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        val openGlView = view.findViewById<OpenGlView>(R.id.openGlView)
+
+        // 1. Yaşam döngüsünü kütüphaneye bağla (ÖNEMLİ: Memory leak ve uyku modu crash'lerini engeller)
+        viewModel.bindLifecycle(viewLifecycleOwner.lifecycle)
+
+        // 2. Kamerayı tanımla (İlk initiliazation)
+        viewModel.initCamera(openGlView)
+        
+        // 3. Surface hazır olunca görüntü önizlemesini başlat
+        openGlView.holder.addCallback(object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                // Kamera ve mikrofon iznini aldığınızdan emin olduktan sonra çağırın:
+                viewModel.startPreview()
+            }
+            override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, height: Int) {}
+            override fun surfaceDestroyed(h: SurfaceHolder) {}
+        })
+
+        // 4. RTMP Yayınını başlatma ve durdurma
+        btnStart.setOnClickListener {
+            viewModel.startStream("rtmp://sunucu.adresi/live", "stream_key")
+        }
+        
+        btnStop.setOnClickListener {
+            viewModel.stopStream()
+        }
+
+        // 5. Yayın durumunu (State API) Dinleme
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.streamState.collectLatest { state ->
+                    when (state) {
+                        is StreamState.Streaming -> { /* Yayındayız */ }
+                        is StreamState.Connecting -> { /* Bağlanıyor... */ }
+                        is StreamState.Stopped -> { /* Yayın durdu */ }
+                        is StreamState.Error -> { /* Hata alındı: state.message */ }
+                        else -> { /* Idle / Başlangıç */ }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+**Not:** Yayını başlatmadan önce Kamera (`Manifest.permission.CAMERA`) ve Mikrofon (`Manifest.permission.RECORD_AUDIO`) izinlerini kullanıcıdan runtime'da almış olmanız gerekmektedir. Yüksek stabilite için kütüphane kendi içinde Lifecycle Aware olarak çalışır, arkaplan görevlerini dert etmenize gerek kalmaz.
+
 ### Projeyi Direkt Çalıştırmak
 
 Eğer kütüphane olarak değil de var olan örnek uygulamayı test etmek isterseniz:
