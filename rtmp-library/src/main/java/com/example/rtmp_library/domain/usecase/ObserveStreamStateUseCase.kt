@@ -7,7 +7,7 @@ class ObserveStreamStateUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke(
+    suspend operator fun invoke(
         onConnectionStarted: () -> Unit,
         onConnectionSuccess: () -> Unit,
         onConnectionFailed: (String) -> Unit,

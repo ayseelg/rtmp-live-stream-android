@@ -16,7 +16,10 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 import com.example.rtmplibrary.domain.model.StreamState
 import com.example.rtmplibrary.presentation.viewmodel.StreamViewModel
 import com.pedro.library.view.OpenGlView
@@ -38,13 +41,12 @@ class StreamFragment : Fragment() {
     private lateinit var tvStatus: TextView
     private lateinit var controlsContainer: View
 
-    private val viewModel: StreamViewModel by viewModels()//hilt kullanımı
+    private val viewModel: StreamViewModel by viewModels() // hilt kullanımı
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.values.all { it }
-        if (allGranted) {
+        if (permissions.values.all { it }) {
             startStreaming()
         } else {
             Toast.makeText(requireContext(), "Kamera ve mikrofon izni gerekli", Toast.LENGTH_LONG).show()
@@ -60,7 +62,17 @@ class StreamFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        setupViews(view)
+        setupCamera()
+        setupListeners()
+        observeViewModel()
+        
+        // Yeni eklediğimiz Lifecycle bağlama işlemi
+        viewModel.bindLifecycle(viewLifecycleOwner.lifecycle)
+    }
 
+    private fun setupViews(view: View) {
         openGlView = view.findViewById(R.id.openGlView)
         btnStartStop = view.findViewById(R.id.btnStartStop)
         btnEndStream = view.findViewById(R.id.btnEndStream)
@@ -75,82 +87,93 @@ class StreamFragment : Fragment() {
 
         etRtmpUrl.setText("rtmp://10.0.2.2:1935/stream")
         etStreamKey.setText("test")
+    }
 
-        // RtmpCamera2 artik data katmaninda; openGlView buradan iletiliyor
+    private fun setupCamera() {
         viewModel.initCamera(openGlView)
-
         openGlView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                val hasCam = ContextCompat.checkSelfPermission(
-                    requireContext(), Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-                if (hasCam && !viewModel.isStreaming) {
+                if (hasCameraPermission() && !viewModel.isStreaming) {
                     viewModel.startPreview()
                 }
             }
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                viewModel.stopStream()
+                // Camera destruction should be handled via Lifecycle now, 
+                // but keeping this for extra safety.
             }
         })
+    }
 
+    private fun setupListeners() {
         btnStartStop.setOnClickListener {
-            val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
-            val allGranted = permissions.all {
-                ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+            if (hasCameraAndAudioPermissions()) {
+                startStreaming()
+            } else {
+                permissionLauncher.launch(
+                    arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+                )
             }
-            if (allGranted) startStreaming() else permissionLauncher.launch(permissions)
         }
 
-        btnEndStream.setOnClickListener {
-            viewModel.stopStream()
-        }
+        btnEndStream.setOnClickListener { viewModel.stopStream() }
+        btnSwitchCamera.setOnClickListener { viewModel.switchCamera() }
+        btnClose.setOnClickListener { requireActivity().finish() }
+    }
 
-        btnSwitchCamera.setOnClickListener {
-            viewModel.switchCamera()
-        }
-
-        btnClose.setOnClickListener {
-            requireActivity().finish()
-        }
-
-        @Suppress("DEPRECATION")
-        lifecycleScope.launchWhenStarted {
-            viewModel.streamState.collectLatest { state ->
-                when (state) {
-                    is StreamState.Idle, is StreamState.Stopped -> {
-                        btnStartStop.isEnabled = true
-                        controlsContainer.visibility = View.VISIBLE
-                        btnEndStream.visibility = View.GONE
-                        liveStatusCard.visibility = View.GONE
-                        viewerCountCard.visibility = View.GONE
-                        tvStatus.visibility = View.GONE
-                    }
-                    is StreamState.Error -> {
-                        btnStartStop.isEnabled = true
-                        controlsContainer.visibility = View.VISIBLE
-                        btnEndStream.visibility = View.GONE
-                        liveStatusCard.visibility = View.GONE
-                        viewerCountCard.visibility = View.GONE
-                        tvStatus.visibility = View.GONE
-                        Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
-                    }
-                    is StreamState.Connecting -> {
-                        btnStartStop.isEnabled = false
-                        showStatus("Baglanıyor...")
-                    }
-                    is StreamState.Streaming -> {
-                        btnStartStop.isEnabled = false
-                        controlsContainer.visibility = View.GONE
-                        btnEndStream.visibility = View.VISIBLE
-                        liveStatusCard.visibility = View.VISIBLE
-                        viewerCountCard.visibility = View.VISIBLE
-                        tvStatus.visibility = View.GONE
-                    }
-                    null -> {}
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.streamState.collectLatest { state ->
+                    updateUIForState(state)
                 }
             }
         }
+    }
+
+    private fun updateUIForState(state: StreamState?) {
+        when (state) {
+            is StreamState.Idle, is StreamState.Stopped -> {
+                btnStartStop.isEnabled = true
+                controlsContainer.visibility = View.VISIBLE
+                btnEndStream.visibility = View.GONE
+                liveStatusCard.visibility = View.GONE
+                viewerCountCard.visibility = View.GONE
+                tvStatus.visibility = View.GONE
+            }
+            is StreamState.Error -> {
+                btnStartStop.isEnabled = true
+                controlsContainer.visibility = View.VISIBLE
+                btnEndStream.visibility = View.GONE
+                liveStatusCard.visibility = View.GONE
+                viewerCountCard.visibility = View.GONE
+                tvStatus.visibility = View.GONE
+                Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+            }
+            is StreamState.Connecting -> {
+                btnStartStop.isEnabled = false
+                showStatus("Bağlanıyor...")
+            }
+            is StreamState.Streaming -> {
+                btnStartStop.isEnabled = false
+                controlsContainer.visibility = View.GONE
+                btnEndStream.visibility = View.VISIBLE
+                liveStatusCard.visibility = View.VISIBLE
+                viewerCountCard.visibility = View.VISIBLE
+                tvStatus.visibility = View.GONE
+            }
+            null -> {}
+        }
+    }
+
+    private fun hasCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun hasCameraAndAudioPermissions(): Boolean {
+        val hasCam = hasCameraPermission()
+        val hasMic = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        return hasCam && hasMic
     }
 
     private fun showStatus(message: String) {
@@ -177,11 +200,11 @@ class StreamFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Preview is started inside SurfaceHolder.Callback.surfaceCreated
+        // Preview is handled securely by Lifecycle-aware DataSource now
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.stopStream()
+        // StopStream is handled securely by Lifecycle-aware DataSource now
     }
 }

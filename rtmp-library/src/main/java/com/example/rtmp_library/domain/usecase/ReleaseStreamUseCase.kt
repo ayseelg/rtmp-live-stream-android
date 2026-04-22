@@ -3,13 +3,14 @@ package com.example.rtmplibrary.domain.usecase
 import com.example.rtmplibrary.domain.repository.StreamRepository
 import javax.inject.Inject
 
-class StartPreviewUseCase @Inject constructor(
+class ReleaseStreamUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
     suspend operator fun invoke(): Result<Unit> {
-        return repository.startPreview()
+        return repository.release()
     }
 
 }
-//Bu kod, kamera önizlemesini başlatmak için yazılmış bir "use case" sınıfıdır
+//Bu kod, hafıza sızıntılarını (memory leak) önlemek için yayınla 
+//ilgili tüm referansları (kamera görünümü, callbackler vb.) temizler.

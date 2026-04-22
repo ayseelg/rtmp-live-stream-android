@@ -1,24 +1,29 @@
 package com.example.rtmplibrary.domain.repository
 
+import androidx.lifecycle.Lifecycle
 import com.pedro.library.view.OpenGlView
 
 interface StreamRepository {
 
-    fun initCamera(openGlView: OpenGlView): Result<Unit>
+    suspend fun initCamera(openGlView: OpenGlView): Result<Unit>
 
-    fun startStream(url: String): Result<Unit>
+    suspend fun bindLifecycle(lifecycle: Lifecycle): Result<Unit>
 
-    fun stopStream(): Result<Unit>
+    suspend fun startStream(url: String): Result<Unit>
 
-    fun startPreview(): Result<Unit>
+    suspend fun stopStream(): Result<Unit>
 
-    fun stopPreview(): Result<Unit>
+    suspend fun startPreview(): Result<Unit>
 
-    fun switchCamera(): Result<Unit>
+    suspend fun stopPreview(): Result<Unit>
 
-    fun isStreaming(): Result<Boolean>
+    suspend fun switchCamera(): Result<Unit>
 
-    fun setStreamCallbacks(
+    suspend fun isStreaming(): Result<Boolean>
+
+    suspend fun release(): Result<Unit>
+
+    suspend fun setStreamCallbacks(
         onConnectionStarted: () -> Unit,
         onConnectionSuccess: () -> Unit,
         onConnectionFailed: (String) -> Unit,

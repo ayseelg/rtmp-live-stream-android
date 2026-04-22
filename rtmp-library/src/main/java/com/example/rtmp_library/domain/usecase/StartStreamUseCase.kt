@@ -7,7 +7,7 @@ class StartStreamUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke(url: String): Result<Unit> {
+    suspend operator fun invoke(url: String): Result<Unit> {
         return repository.startStream(url)
     }
 

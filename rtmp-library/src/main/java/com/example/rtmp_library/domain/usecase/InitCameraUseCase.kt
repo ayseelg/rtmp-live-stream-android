@@ -8,7 +8,7 @@ class InitCameraUseCase @Inject constructor(
     private val repository: StreamRepository
 ) {
 
-    operator fun invoke(openGlView: OpenGlView): Result<Unit> {
+    suspend operator fun invoke(openGlView: OpenGlView): Result<Unit> {
         return repository.initCamera(openGlView)
     }
 

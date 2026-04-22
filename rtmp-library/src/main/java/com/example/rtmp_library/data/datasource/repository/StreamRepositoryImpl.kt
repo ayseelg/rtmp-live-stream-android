@@ -3,6 +3,8 @@
 import com.pedro.library.view.OpenGlView
 import com.example.rtmplibrary.data.datasource.StreamDataSource
 import com.example.rtmplibrary.domain.repository.StreamRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -10,49 +12,62 @@ class StreamRepositoryImpl @Inject constructor(
     private val dataSource: StreamDataSource
 ) : StreamRepository {
 
-    override fun initCamera(openGlView: OpenGlView): Result<Unit> {
-        return runCatching {
+    override suspend fun initCamera(openGlView: OpenGlView): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.initCamera(openGlView)
         }
     }
 
-    override fun startStream(url: String): Result<Unit> {
-        return runCatching {
+    override suspend fun bindLifecycle(lifecycle: androidx.lifecycle.Lifecycle): Result<Unit> = withContext(Dispatchers.Main) {
+        runCatching {
+            dataSource.bindLifecycle(lifecycle)
+        }
+    }
+
+    override suspend fun startStream(url: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.startStream(url)
         }
     }
 
-    override fun stopStream(): Result<Unit> {
-        return runCatching {
+    override suspend fun stopStream(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.stopStream()
         }
     }
 
-    override fun startPreview(): Result<Unit> {
-        return runCatching {
+    override suspend fun startPreview(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.startPreview()
         }
     }
 
-    override fun stopPreview(): Result<Unit> {
-        return runCatching {
+    override suspend fun stopPreview(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.stopPreview()
         }
     }
 
-    override fun switchCamera(): Result<Unit> {
-        return runCatching {
+    override suspend fun switchCamera(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.switchCamera()
         }
     }
 
-    override fun isStreaming(): Result<Boolean> {
-        return runCatching {
+    override suspend fun isStreaming(): Result<Boolean> = withContext(Dispatchers.IO) {
+        runCatching {
             dataSource.isStreaming
         }
     }
 
-    override fun setStreamCallbacks(
+    override suspend fun release(): Result<Unit> = withContext(Dispatchers.Main) {
+        // UI thread üzerinde release edilmeli çünkü içerdeki View referanslarını serbest bırakıyoruz
+        runCatching {
+            dataSource.release()
+        }
+    }
+
+    override suspend fun setStreamCallbacks(
         onConnectionStarted: () -> Unit,
         onConnectionSuccess: () -> Unit,
         onConnectionFailed: (String) -> Unit,
