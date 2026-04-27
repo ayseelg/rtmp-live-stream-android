@@ -1,14 +1,13 @@
-ï»¿package com.example.rtmplibrary.data.repository
+package com.example.rtmplibrary.data.repository
 
 import com.pedro.library.view.OpenGlView
 import com.example.rtmplibrary.data.datasource.StreamDataSource
 import com.example.rtmplibrary.domain.repository.StreamRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 
-class StreamRepositoryImpl @Inject constructor(
+class StreamRepositoryImpl (
     private val dataSource: StreamDataSource
 ) : StreamRepository {
 
@@ -61,7 +60,7 @@ class StreamRepositoryImpl @Inject constructor(
     }
 
     override suspend fun release(): Result<Unit> = withContext(Dispatchers.Main) {
-        // UI thread Ã¼zerinde release edilmeli Ã§Ã¼nkÃ¼ iÃ§erdeki View referanslarÄ±nÄ± serbest bÄ±rakÄ±yoruz
+        // UI thread üzerinde release edilmeli çünkü içerdeki View referanslarýný serbest býrakýyoruz
         runCatching {
             dataSource.release()
         }

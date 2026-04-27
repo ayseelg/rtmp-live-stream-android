@@ -22,11 +22,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import com.example.rtmplibrary.domain.model.StreamState
 import com.example.rtmplibrary.presentation.viewmodel.StreamViewModel
+import com.example.rtmplibrary.presentation.viewmodel.StreamViewModelFactory
 import com.pedro.library.view.OpenGlView
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
-@AndroidEntryPoint
 class StreamFragment : Fragment() {
 
     private lateinit var openGlView: OpenGlView
@@ -41,7 +40,8 @@ class StreamFragment : Fragment() {
     private lateinit var tvStatus: TextView
     private lateinit var controlsContainer: View
 
-    private val viewModel: StreamViewModel by viewModels() // hilt kullanımı
+    // Hilt yerine Kütüphanenin kendi Factory'sini kullanıyoruz
+    private val viewModel: StreamViewModel by viewModels { StreamViewModelFactory() }
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()

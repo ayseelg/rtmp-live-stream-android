@@ -1,4 +1,4 @@
-ï»¿package com.example.rtmplibrary.presentation.viewmodel
+package com.example.rtmplibrary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,15 +13,12 @@ import com.example.rtmplibrary.domain.usecase.SwitchCameraUseCase
 import com.example.rtmplibrary.domain.usecase.ReleaseStreamUseCase
 import com.example.rtmplibrary.domain.usecase.BindLifecycleUseCase
 import com.example.rtmplibrary.domain.model.StreamState
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class StreamViewModel @Inject constructor(
+class StreamViewModel (
     private val observeStreamStateUseCase: ObserveStreamStateUseCase,
     private val startStreamUseCase: StartStreamUseCase,
     private val stopStreamUseCase: StopStreamUseCase,
@@ -43,12 +40,12 @@ class StreamViewModel @Inject constructor(
     val streamState: StateFlow<StreamState> = _streamState.asStateFlow()
 
     init {
-        //RTMP yayÄ±nÄ±nÄ±n durumunu dinler
-        //ve yayÄ±nÄ±n durumuna gÃ¶re state gÃ¼nceller.
+        //RTMP yayýnýnýn durumunu dinler
+        //ve yayýnýn durumuna göre state günceller.
         viewModelScope.launch {
             handleActionResult(
                 observeStreamStateUseCase(
-                    onConnectionStarted = {//onConnectionStarted â†’ RTMP sunucusuna baÄŸlantÄ± baÅŸlatÄ±ldÄ±ÄŸÄ±nda Ã§alÄ±ÅŸÄ±r ve stateâ€™i Connecting olarak gÃ¼nceller.
+                    onConnectionStarted = {//onConnectionStarted › RTMP sunucusuna baðlantý baþlatýldýðýnda çalýþýr ve state’i Connecting olarak günceller.
                         _streamState.value = StreamState.Connecting
                     },
                     onConnectionSuccess = {
@@ -61,7 +58,7 @@ class StreamViewModel @Inject constructor(
                         _streamState.value = StreamState.Stopped
                     },
                     onAuthError = {
-                        _streamState.value = StreamState.Error("Sunucu auth hatasÄ±")
+                        _streamState.value = StreamState.Error("Sunucu auth hatasý")
                     },
                     onPreparationFailed = { reason ->
                         _streamState.value = StreamState.Error(reason)

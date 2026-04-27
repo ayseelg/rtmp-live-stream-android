@@ -2,9 +2,8 @@ package com.example.rtmplibrary.domain.usecase
 
 import androidx.lifecycle.Lifecycle
 import com.example.rtmplibrary.domain.repository.StreamRepository
-import javax.inject.Inject
 
-class BindLifecycleUseCase @Inject constructor(
+class BindLifecycleUseCase (
     private val repository: StreamRepository
 ) {
 

@@ -1,15 +1,12 @@
-package com.example.rtmplibrary.data.datasource
+﻿package com.example.rtmplibrary.data.datasource
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.pedro.common.ConnectChecker
 import com.pedro.library.rtmp.RtmpCamera2
 import com.pedro.library.view.OpenGlView
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleObserver {
+class StreamDataSource () : ConnectChecker, DefaultLifecycleObserver {
 
     private var onConnectionStarted: (() -> Unit)? = null
     private var onConnectionSuccess: (() -> Unit)? = null
@@ -39,7 +36,7 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
             }
             rtmpCamera.stopPreview()
         }
-        // Memory leak'leri önlemek için callback'leri temizliyoruz.
+        // Memory leak'leri Ã¶nlemek iÃ§in callback'leri temizliyoruz.
         onConnectionStarted = null
         onConnectionSuccess = null
         onConnectionFailed = null
@@ -52,7 +49,7 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
         lifecycle.addObserver(this)
     }
 
-    fun startStream(url: String) {// kamera ve mikrofon hazılanıp yayyın başlatılıyor
+    fun startStream(url: String) {// kamera ve mikrofon hazÄ±lanÄ±p yayyÄ±n baÅŸlatÄ±lÄ±yor
         val camera = getCameraOrThrow()
         onConnectionStarted?.invoke()
         camera.startPreview()
@@ -60,13 +57,13 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
             camera.startStream(url)
         } else {
             camera.stopPreview()
-            val reason = "Kamera/ses hazırlanamadı"
+            val reason = "Kamera/ses hazÄ±rlanamadÄ±"
             onPreparationFailed?.invoke(reason)
             throw IllegalStateException(reason)
         }
     }
 
-    fun stopStream() {//yyaın durdurma
+    fun stopStream() {//yyaÄ±n durdurma
         val camera = getCameraOrThrow()
         if (camera.isStreaming) camera.stopStream()
         camera.stopPreview()
@@ -81,7 +78,7 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
         getCameraOrThrow().stopPreview()
     }
 
-    fun switchCamera() {// kamera değiştirme
+    fun switchCamera() {// kamera deÄŸiÅŸtirme
         getCameraOrThrow().switchCamera()
     }
 
@@ -104,7 +101,7 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
     }
 
 
-    // ConnectChecker callback'leri — yayın durumunu state'e yansıtır
+    // ConnectChecker callback'leri â€” yayÄ±n durumunu state'e yansÄ±tÄ±r
     override fun onConnectionStarted(url: String) {
         onConnectionStarted?.invoke()
     }
@@ -132,11 +129,11 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
 
     override fun onAuthSuccess() {}
 
-    // --- LifecycleAwareness: Uygulama Arkaplana Geçtiğinde Memory Leak ve Çökmeleri Önleme ---
+    // --- LifecycleAwareness: Uygulama Arkaplana GeÃ§tiÄŸinde Memory Leak ve Ã‡Ã¶kmeleri Ã–nleme ---
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        // Eğer arkaplan task'ı veya Foreground Service entegrasyonumuz tam değilse,
-        // kullanıcı uygulamadan çıkınca crash almamak için yayını/kamerayı arkaplanda durdurmak iyi bir pratiktir.
+        // EÄŸer arkaplan task'Ä± veya Foreground Service entegrasyonumuz tam deÄŸilse,
+        // kullanÄ±cÄ± uygulamadan Ã§Ä±kÄ±nca crash almamak iÃ§in yayÄ±nÄ±/kamerayÄ± arkaplanda durdurmak iyi bir pratiktir.
         if (this::rtmpCamera.isInitialized && rtmpCamera.isStreaming) {
             stopStream()
         }
@@ -151,5 +148,6 @@ class StreamDataSource @Inject constructor() : ConnectChecker, DefaultLifecycleO
         release()
     }
 }
-//Bu sınıf, yayının durumunu (Idle, Connecting, Streaming, Stopped, Error) tutan
-// ve yayın başlatılıp durdurulduğunda bu durumu güncelleyen veri kaynağıdır.
+//Bu sÄ±nÄ±f, yayÄ±nÄ±n durumunu (Idle, Connecting, Streaming, Stopped, Error) tutan
+// ve yayÄ±n baÅŸlatÄ±lÄ±p durdurulduÄŸunda bu durumu gÃ¼ncelleyen veri kaynaÄŸÄ±dÄ±r.
+

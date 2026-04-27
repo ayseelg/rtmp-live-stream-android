@@ -1,9 +1,8 @@
 package com.example.rtmplibrary.domain.usecase
 
 import com.example.rtmplibrary.domain.repository.StreamRepository
-import javax.inject.Inject
 
-class ObserveStreamStateUseCase @Inject constructor(
+class ObserveStreamStateUseCase (
     private val repository: StreamRepository
 ) {
 

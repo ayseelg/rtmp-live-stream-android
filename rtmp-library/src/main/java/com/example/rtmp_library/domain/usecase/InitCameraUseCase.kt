@@ -2,9 +2,8 @@ package com.example.rtmplibrary.domain.usecase
 
 import com.pedro.library.view.OpenGlView
 import com.example.rtmplibrary.domain.repository.StreamRepository
-import javax.inject.Inject
 
-class InitCameraUseCase @Inject constructor(
+class InitCameraUseCase (
     private val repository: StreamRepository
 ) {
 
@@ -15,3 +14,4 @@ class InitCameraUseCase @Inject constructor(
 }
 //Bu kod, RtmpCamera2'yi başlatmak için yazılmış bir "use case" sınıfıdır;
 // Fragment'ten gelen OpenGlView'i data katmanına iletir
+

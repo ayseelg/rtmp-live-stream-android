@@ -1,9 +1,8 @@
 package com.example.rtmplibrary.domain.usecase
 
 import com.example.rtmplibrary.domain.repository.StreamRepository
-import javax.inject.Inject
 
-class SwitchCameraUseCase @Inject constructor(
+class SwitchCameraUseCase (
     private val repository: StreamRepository
 ) {
 
@@ -13,3 +12,4 @@ class SwitchCameraUseCase @Inject constructor(
 
 }
 //Bu kod, ön/arka kamera geçişini yapmak için yazılmış bir "use case" sınıfıdır
+

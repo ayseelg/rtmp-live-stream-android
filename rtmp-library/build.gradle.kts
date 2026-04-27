@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.ksp)
     id("maven-publish")
 }
 
@@ -45,10 +44,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     
-    // Uygulamada kullanan kişinin OpenGlView ekranını ve Hilt'i görebilmesi için API (dışa açık bağlantı) olmalı
+    // Uygulamada kullanan kiþinin OpenGlView ekrann grebilmesi iin API (da ak balant) olmal
     api("com.github.pedroSG94.RootEncoder:library:2.6.7")
-    api(libs.hilt.android)
-    ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
