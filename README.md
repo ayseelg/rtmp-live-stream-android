@@ -161,7 +161,6 @@ Her yeni güncellemeyle kütüphaneye eklenen özellikler ve değişiklikler bur
 - Ön/arka kamera geçişi eklendi (`Switch Camera`).
 - Yayın durumunun takibi (Bağlanıyor, Yayında, Durdu, Hata) eklendi.
 - Clean Architecture prensipleriyle katmanlı mimari oluşturuldu.
-- Hilt (Dependency Injection) altyapısı sağlandı.
 - Lifecycle Aware (Yaşam döngüsüne duyarlı) kamera kontrolü yapıldı (Memory Leak'ler önlendi).
 - Kütüphanenin `GitHub Packages` kullanılarak diğer projelerde dış bağımlılık olarak kullanılması entegre edildi.
 - Kurulum aşamasına Fragment/Activity içerisindeki Init/Kurulum kod parçaları detaylıca eklendi.
