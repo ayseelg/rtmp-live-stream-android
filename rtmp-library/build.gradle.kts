@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -67,9 +70,14 @@ afterEvaluate {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/ayseelg/rtmp-live-stream-android")
                 credentials {
-                    // Bu bilgileri gradle.properties veya environment variables üzerinden okuyacağız
-                    username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-                    password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                    // Cihazdaki local.properties üzerinden okuyacağız (Görünmez kalması için)
+                    val localProperties = Properties()
+                    val localPropertiesFile = rootProject.file("local.properties")
+                    if (localPropertiesFile.exists()) {
+                        localProperties.load(FileInputStream(localPropertiesFile))
+                    }
+                    username = localProperties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                    password = localProperties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
                 }
             }
         }
