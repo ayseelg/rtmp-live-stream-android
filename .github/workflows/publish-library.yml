@@ -1,0 +1,40 @@
+name: Publish Library Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write # GitHub'da Release (Sürüm) oluşturabilmek için yazma izni verilir
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Library (Release AAR)
+      run: ./gradlew :rtmp-library:assembleRelease --no-daemon
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: rtmp-library/build/outputs/aar/rtmp-library-release.aar # Çıktı olarak oluşan kütüphane paketi
+        body: ${{ github.event.head_commit.message }} # Yazdığın commit mesajını açıklama olarak ekler
+        tag_name: v1.0.${{ github.run_number }} # Her push işleminde sondaki sayıyı 1 artırır (v1.0.1, v1.0.2 vb.)
+        name: Release v1.0.${{ github.run_number }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
